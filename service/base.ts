@@ -148,13 +148,19 @@ const handleStream = (
       buffer += decoder.decode(result.value, { stream: true })
       const lines = buffer.split('\n')
       try {
-        lines.forEach((message) => {
+        lines.forEach((message, index) => {
           if (!message || !message.startsWith('data: '))
             return
+
+          const jsonString = message.substring(6).trim()
+          if (!jsonString)
+            return
+
           try {
-            bufferObj = JSON.parse(message.substring(6)) // remove data: and parse as json
+            bufferObj = JSON.parse(jsonString) // remove data: and parse as json
           }
           catch (e) {
+            console.warn('Failed to parse JSON:', jsonString, e)
             onData('', isFirstMessage, {
               conversationId: bufferObj?.conversation_id,
               messageId: bufferObj?.id,

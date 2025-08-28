@@ -157,6 +157,34 @@ export type WorkflowProcess = {
   expand?: boolean // for UI
 }
 
+// New types for workflow chaining
+export type WorkflowChainStep = {
+  id: string
+  name: string
+  workflowId: string
+  apiKey: string
+  inputs: Record<string, any>
+  outputs?: Record<string, any>
+  status: 'pending' | 'running' | 'completed' | 'failed'
+  allowUserEdit: boolean
+  userModifications?: Record<string, any>
+}
+
+export type WorkflowChain = {
+  id: string
+  name: string
+  steps: WorkflowChainStep[]
+  currentStepIndex: number
+  status: 'pending' | 'running' | 'completed' | 'failed'
+}
+
+export type ChainStepResult = {
+  stepId: string
+  outputs: Record<string, any>
+  success: boolean
+  error?: string
+}
+
 export enum CodeLanguage {
   python3 = 'python3',
   javascript = 'javascript',

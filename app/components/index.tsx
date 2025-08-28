@@ -479,6 +479,18 @@ const TextGeneration = () => {
               <div className='flex items-center space-x-3'>
                 <div className={cn(s.appIcon, 'shrink-0')}></div>
                 <div className='text-lg text-gray-800 font-semibold'>{APP_INFO.title}</div>
+                <a
+                  href="/workflow-chain-interactive.html"
+                  className='ml-4 px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm'
+                >
+                  Interactive Chain
+                </a>
+                <a
+                  href="/workflow-chain-demo.html"
+                  className='ml-2 px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm'
+                >
+                  Basic Demo
+                </a>
               </div>
               {!isPC && (
                 <Button

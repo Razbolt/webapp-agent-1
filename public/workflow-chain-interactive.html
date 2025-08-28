@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Workflow Chain</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .workflow-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .workflow-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-section {
+            grid-column: 1 / -1;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 8px 4px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .button.secondary {
+            background: #6b7280;
+        }
+
+        .button.success {
+            background: #10b981;
+        }
+
+        .button.danger {
+            background: #ef4444;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -22px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6b7280;
+        }
+
+        .timeline-item.active::before {
+            background: #3b82f6;
+        }
+
+        .timeline-item.completed::before {
+            background: #10b981;
+        }
+
+        .timeline-item.error::before {
+            background: #ef4444;
+        }
+
+        .output-area {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .readable-output {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 16px;
+        }
+
+        .readable-output h3 {
+            margin-top: 0;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        .readable-output pre {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: -50%;
+            width: 100%;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: 1;
+        }
+
+        .step.completed:not(:last-child)::after {
+            background: #10b981;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            z-index: 2;
+            position: relative;
+        }
+
+        .step.active .step-circle {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .step.completed .step-circle {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-label {
+            margin-top: 8px;
+            font-size: 12px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .step.active .step-label {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .step.completed .step-label {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .review-section {
+            background: #fffbeb;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+
+        .review-section h3 {
+            color: #92400e;
+            margin-top: 0;
+        }
+
+        .log-entry {
+            margin: 4px 0;
+            padding: 4px 0;
+            border-bottom: 1px solid #374151;
+        }
+
+        .log-entry.success {
+            color: #10b981;
+        }
+
+        .log-entry.error {
+            color: #ef4444;
+        }
+
+        .log-entry.loading {
+            color: #3b82f6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 Interactive Workflow Chain</h1>
+            <p>Create, execute, and modify workflow chains with human-in-the-loop review</p>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="card">
+            <div class="step-indicator">
+                <div class="step" id="step-input">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Setup Inputs</div>
+                </div>
+                <div class="step" id="step-first">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">First Workflow</div>
+                </div>
+                <div class="step" id="step-review">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Review & Modify</div>
+                </div>
+                <div class="step" id="step-second">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Second Workflow</div>
+                </div>
+                <div class="step" id="step-complete">
+                    <div class="step-circle">✓</div>
+                    <div class="step-label">Complete</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="workflow-container">
+            <!-- Input Section -->
+            <div class="input-section">
+                <div class="card" id="input-card">
+                    <h2>🚀 Setup Your Workflow Chain</h2>
+                    <p>Configure the inputs for your two-step analysis workflow</p>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="company_name">Company Name</label>
+                            <input type="text" id="company_name" value="Tesla"
+                                placeholder="e.g., Tesla, Apple, Microsoft">
+                        </div>
+                        <div class="form-group">
+                            <label for="sector">Sector</label>
+                            <select id="sector">
+                                <option value="Technology">Technology</option>
+                                <option value="Automotive" selected>Automotive</option>
+                                <option value="Energy">Energy</option>
+                                <option value="Healthcare">Healthcare</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Retail">Retail</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="geographies">Geographies</label>
+                            <input type="text" id="geographies" value="USA, Europe"
+                                placeholder="e.g., USA, Europe, Global">
+                        </div>
+                        <div class="form-group">
+                            <label for="peer_list">Competitor List</label>
+                            <input type="text" id="peer_list" value="Ford, GM, Rivian"
+                                placeholder="e.g., Ford, GM, Rivian">
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 24px;">
+                        <button class="button" onclick="startWorkflowChain()">
+                            🔥 Start Workflow Chain
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Review Section (Hidden initially) -->
+                <div class="card hidden" id="review-card">
+                    <div class="review-section">
+                        <h3>👁️ Review First Workflow Output</h3>
+                        <p>The first workflow has completed. Review the output below and modify the input for the second
+                            workflow if needed.</p>
+
+                        <div id="first-output-display"></div>
+
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label for="second_input_review">Input for Second Workflow (editable)</label>
+                            <textarea id="second_input_review" rows="6"
+                                placeholder="The output from the first workflow will appear here..."></textarea>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 16px;">
+                            <button class="button success" onclick="proceedToSecondWorkflow()">
+                                ✅ Proceed with Second Workflow
+                            </button>
+                            <button class="button secondary" onclick="resetChain()">
+                                🔄 Start Over
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline and Logs -->
+            <div class="card">
+                <h3>📋 Execution Timeline</h3>
+                <div class="timeline" id="timeline">
+                    <!-- Timeline items will be added here -->
+                </div>
+
+                <h3>🖥️ System Logs</h3>
+                <div class="output-area" id="logs">
+                    <div class="log-entry">💡 Ready to start workflow chain execution...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="card hidden" id="results-card">
+            <h2>📊 Workflow Results</h2>
+
+            <div id="results-container">
+                <!-- Results will be populated here -->
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="button" onclick="startNewChain()">
+                    🆕 Start New Chain
+                </button>
+                <button class="button secondary" onclick="exportResults()">
+                    📤 Export Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentChainId = null;
+        let currentChain = null;
+        let firstWorkflowOutput = null;
+        let secondWorkflowOutput = null;
+
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'loading' ? 'loading' : '';
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${className}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(entry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function addTimelineItem(title, description, status = 'active') {
+            const timeline = document.getElementById('timeline');
+            const item = document.createElement('div');
+            item.className = `timeline-item ${status}`;
+            item.innerHTML = `
+                <h4 style="margin: 0 0 8px 0; color: #374151;">${title}</h4>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">${description}</p>
+            `;
+            timeline.appendChild(item);
+        }
+
+        function updateStep(stepId, status = 'active') {
+            // Reset all steps
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+
+            // Set completed status for previous steps
+            const steps = ['step-input', 'step-first', 'step-review', 'step-second', 'step-complete'];
+            const currentIndex = steps.indexOf(stepId);
+
+            for (let i = 0; i < currentIndex; i++) {
+                document.getElementById(steps[i]).classList.add('completed');
+            }
+
+            // Set current step status
+            if (status === 'completed') {
+                document.getElementById(stepId).classList.add('completed');
+            } else {
+                document.getElementById(stepId).classList.add('active');
+            }
+        }
+
+        async function startWorkflowChain() {
+            log('🚀 Starting workflow chain creation...', 'loading');
+            updateStep('step-first');
+            addTimelineItem('Creating Workflow Chain', 'Setting up two-step workflow with user inputs');
+
+            const inputs = {
+                company_name: document.getElementById('company_name').value,
+                Sector: document.getElementById('sector').value,
+                Geographies: document.getElementById('geographies').value,
+                Peer_list: document.getElementById('peer_list').value
+            };
+
+            try {
+                // Create workflow chain with user inputs
+                const createResponse = await fetch('/api/workflow-chain-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'create-custom',
+                        inputs: inputs
+                    })
+                });
+
+                if (!createResponse.ok) {
+                    throw new Error(`HTTP ${createResponse.status}: ${createResponse.statusText}`);
+                }
+
+                const createResult = await createResponse.json();
+
+                if (!createResult.success) {
+                    throw new Error(`Create failed: ${createResult.error}`);
+                }
+
+                currentChainId = createResult.chainId;
+                currentChain = createResult.chain;
+
+                log(`✅ Chain created: ${currentChainId}`, 'success');
+                addTimelineItem('Chain Created', `Successfully created chain with ${currentChain.steps.length} steps`, 'completed');
+
+                // Hide input card
+                document.getElementById('input-card').classList.add('hidden');
+
+                // Execute first workflow
+                await executeFirstWorkflow();
+
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                addTimelineItem('Error', error.message, 'error');
+            }
+        }
+
+        async function executeFirstWorkflow() {
+            log('🔄 Executing first workflow...', 'loading');
+            addTimelineItem('First Workflow', 'Analyzing company and competitors');
+
+            try {
+                const execResponse = await fetch('/api/workflow-chain-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'execute',
+                        chainId: currentChainId
+                    })
+                });
+
+                if (!execResponse.ok) {
+                    throw new Error(`HTTP ${execResponse.status}: ${execResponse.statusText}`);
+                }
+
+                const execResult = await execResponse.json();
+
+                if (!execResult.success) {
+                    throw new Error(`Execution failed: ${execResult.error}`);
+                }
+
+                currentChain = execResult.chain;
+                firstWorkflowOutput = execResult.result.outputs;
+
+                log(`✅ First workflow completed!`, 'success');
+                addTimelineItem('First Workflow Complete', 'Company analysis completed successfully', 'completed');
+
+                // Show review interface
+                showReviewInterface();
+
+            } catch (error) {
+                log(`❌ First workflow error: ${error.message}`, 'error');
+                addTimelineItem('First Workflow Error', error.message, 'error');
+            }
+        }
+
+        function showReviewInterface() {
+            updateStep('step-review');
+
+            // Display first workflow output
+            const outputDisplay = document.getElementById('first-output-display');
+            outputDisplay.innerHTML = `
+                <div class="readable-output">
+                    <h3>📈 Company Analysis Results</h3>
+                    <pre>${firstWorkflowOutput.agent_output}</pre>
+                </div>
+            `;
+
+            // Populate second workflow input
+            document.getElementById('second_input_review').value = firstWorkflowOutput.agent_output;
+
+            // Show review card
+            document.getElementById('review-card').classList.remove('hidden');
+
+            log('👁️ First workflow output ready for review', 'success');
+            addTimelineItem('Review Stage', 'Output ready for human review and modification');
+        }
+
+        async function proceedToSecondWorkflow() {
+            updateStep('step-second');
+            log('🔄 Proceeding to second workflow...', 'loading');
+
+            const modifiedInput = document.getElementById('second_input_review').value;
+
+            addTimelineItem('Second Workflow', 'Processing modified input for detailed analysis');
+
+            try {
+                const execResponse = await fetch('/api/workflow-chain-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'execute',
+                        chainId: currentChainId,
+                        userModifications: { second_input: modifiedInput }
+                    })
+                });
+
+                if (!execResponse.ok) {
+                    throw new Error(`HTTP ${execResponse.status}: ${execResponse.statusText}`);
+                }
+
+                const execResult = await execResponse.json();
+
+                if (!execResult.success) {
+                    throw new Error(`Second workflow failed: ${execResult.error}`);
+                }
+
+                secondWorkflowOutput = execResult.result.outputs;
+
+                log(`✅ Second workflow completed!`, 'success');
+                addTimelineItem('Second Workflow Complete', 'Detailed analysis completed successfully', 'completed');
+
+                // Show final results
+                showFinalResults();
+
+            } catch (error) {
+                log(`❌ Second workflow error: ${error.message}`, 'error');
+                addTimelineItem('Second Workflow Error', error.message, 'error');
+            }
+        }
+
+        function showFinalResults() {
+            updateStep('step-complete', 'completed');
+
+            // Hide review card
+            document.getElementById('review-card').classList.add('hidden');
+
+            // Show results
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = `
+                <div class="readable-output">
+                    <h3>🏢 First Workflow: Company Analysis</h3>
+                    <pre>${firstWorkflowOutput.agent_output}</pre>
+                </div>
+                <div class="readable-output">
+                    <h3>📊 Second Workflow: Detailed Analysis</h3>
+                    <pre>${secondWorkflowOutput.Second_output}</pre>
+                </div>
+            `;
+
+            document.getElementById('results-card').classList.remove('hidden');
+
+            log('🎉 Workflow chain completed successfully!', 'success');
+            addTimelineItem('Chain Complete', 'All workflows executed successfully with human review', 'completed');
+        }
+
+        function resetChain() {
+            location.reload();
+        }
+
+        function startNewChain() {
+            location.reload();
+        }
+
+        function exportResults() {
+            const results = {
+                timestamp: new Date().toISOString(),
+                chain_id: currentChainId,
+                first_workflow_output: firstWorkflowOutput,
+                second_workflow_output: secondWorkflowOutput
+            };
+
+            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `workflow-chain-results-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            log('📤 Results exported successfully', 'success');
+        }
+
+        // Initialize
+        updateStep('step-input');
+    </script>
+</body>
+
+</html>

@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
                         workflowId: SECOND_WORKFLOW_ID,
                         apiKey: SECOND_WORKFLOW_KEY,
                         inputs: {
-                            second_input: 'Will be populated from previous step'
+                            competitor_input: 'Will be populated from agent_output',
+                            current_de_op_input: 'Will be populated from current_de_op_output'
                         },
                         allowUserEdit: true,
                     }
@@ -122,7 +123,8 @@ export async function POST(request: NextRequest) {
                         workflowId: SECOND_WORKFLOW_ID,
                         apiKey: SECOND_WORKFLOW_KEY,
                         inputs: {
-                            second_input: 'Will be populated from previous step'
+                            competitor_input: 'Will be populated from agent_output',
+                            current_de_op_input: 'Will be populated from current_de_op_output'
                         },
                         allowUserEdit: true,
                     }

@@ -367,14 +367,8 @@
                         </div>
                         <div class="form-group">
                             <label for="sector">Sector</label>
-                            <select id="sector">
-                                <option value="Technology">Technology</option>
-                                <option value="Automotive" selected>Automotive</option>
-                                <option value="Energy">Energy</option>
-                                <option value="Healthcare">Healthcare</option>
-                                <option value="Finance">Finance</option>
-                                <option value="Retail">Retail</option>
-                            </select>
+                            <input type="text" id="sector" value="Automotive"
+                                placeholder="e.g., Automotive, Technology, Energy, Healthcare">
                         </div>
                     </div>
 
@@ -408,9 +402,21 @@
                         <div id="first-output-display"></div>
 
                         <div class="form-group" style="margin-top: 20px;">
-                            <label for="second_input_review">Input for Second Workflow (editable)</label>
-                            <textarea id="second_input_review" rows="6"
-                                placeholder="The output from the first workflow will appear here..."></textarea>
+                            <label for="competitor_input_review">🔗 Competitor Analysis Input (for second
+                                workflow)</label>
+                            <textarea id="competitor_input_review" rows="6"
+                                placeholder="Competitor analysis data will appear here..."></textarea>
+                            <small style="color: #6b7280;">This data comes from agent_output and will be sent to the
+                                second workflow's competitor_input field.</small>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label for="current_de_op_input_review">📋 Operations & Business Input (for second
+                                workflow)</label>
+                            <textarea id="current_de_op_input_review" rows="6"
+                                placeholder="Operations and business context data will appear here..."></textarea>
+                            <small style="color: #6b7280;">This data comes from current_de_op_output and will be sent to
+                                the second workflow's current_de_op_input field.</small>
                         </div>
 
                         <div style="text-align: center; margin-top: 16px;">
@@ -601,32 +607,111 @@
         function showReviewInterface() {
             updateStep('step-review');
 
-            // Display first workflow output
+            // Display first workflow outputs with proper separation
             const outputDisplay = document.getElementById('first-output-display');
-            outputDisplay.innerHTML = `
-                <div class="readable-output">
-                    <h3>📈 Company Analysis Results</h3>
-                    <pre>${firstWorkflowOutput.agent_output}</pre>
-                </div>
-            `;
 
-            // Populate second workflow input
-            document.getElementById('second_input_review').value = firstWorkflowOutput.agent_output;
+            let outputHtml = '<div class="readable-output">';
+            outputHtml += '<h3>📈 First Workflow Results</h3>';
+
+            // Check if we have agent_output for workflow chaining
+            let chainableOutput = '';
+
+            if (firstWorkflowOutput && typeof firstWorkflowOutput === 'object') {
+                // Show agent_output prominently (for chaining)
+                if (firstWorkflowOutput.agent_output) {
+                    chainableOutput = firstWorkflowOutput.agent_output;
+                    outputHtml += `
+                        <div class="primary-output" style="margin-bottom: 20px; padding: 15px; border: 2px solid #10b981; border-radius: 8px; background: #f0fdf4;">
+                            <h4 style="margin: 0 0 10px 0; color: #065f46;">🔗 Agent Output (For Workflow Chaining)</h4>
+                            <pre style="background: #ecfdf5; padding: 12px; border-radius: 6px; white-space: pre-wrap; max-height: 200px; overflow-y: auto;">${firstWorkflowOutput.agent_output}</pre>
+                        </div>
+                    `;
+                }
+
+                // Show current_de_op_output in side box (display only)
+                if (firstWorkflowOutput.current_de_op_output) {
+                    outputHtml += `
+                        <div class="side-output" style="margin-bottom: 15px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f9fafb;">
+                            <h4 style="margin: 0 0 8px 0; color: #374151; cursor: pointer;" onclick="toggleOutput('current_de_op_output')">
+                                📋 Operations & Business Analysis (Click to expand)
+                            </h4>
+                            <div id="output-current_de_op_output" style="display: none;">
+                                <pre style="background: #ffffff; padding: 10px; border-radius: 4px; white-space: pre-wrap; max-height: 300px; overflow-y: auto; border: 1px solid #d1d5db;">${firstWorkflowOutput.current_de_op_output}</pre>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // If no agent_output, show warning
+                if (!firstWorkflowOutput.agent_output) {
+                    outputHtml += `
+                        <div class="warning-output" style="margin-bottom: 20px; padding: 15px; border: 2px solid #f59e0b; border-radius: 8px; background: #fffbeb;">
+                            <h4 style="margin: 0 0 10px 0; color: #92400e;">⚠️ No Agent Output Found</h4>
+                            <p style="margin: 0; color: #92400e;">The first workflow did not produce an 'agent_output' field. Workflow chaining may not work as expected.</p>
+                        </div>
+                    `;
+                }
+            } else {
+                // Fallback if output is not an object
+                outputHtml += `<pre>${firstWorkflowOutput}</pre>`;
+                chainableOutput = firstWorkflowOutput;
+            }
+
+            outputHtml += '</div>';
+            outputDisplay.innerHTML = outputHtml;
+
+            // Populate the two input fields for the second workflow
+            const competitorInput = document.getElementById('competitor_input_review');
+            const deOpInput = document.getElementById('current_de_op_input_review');
+
+            if (firstWorkflowOutput && typeof firstWorkflowOutput === 'object') {
+                // Set competitor_input from agent_output
+                if (firstWorkflowOutput.agent_output && competitorInput) {
+                    competitorInput.value = firstWorkflowOutput.agent_output;
+                    log(`🔗 Populated competitor_input with agent_output`, 'success');
+                }
+
+                // Set current_de_op_input from current_de_op_output  
+                if (firstWorkflowOutput.current_de_op_output && deOpInput) {
+                    deOpInput.value = firstWorkflowOutput.current_de_op_output;
+                    log(`📋 Populated current_de_op_input with current_de_op_output`, 'success');
+                }
+            }
+
+            // Log what we're preparing for the second workflow
+            log('✅ Both inputs prepared for second workflow - ready for user review and modification', 'success');
 
             // Show review card
             document.getElementById('review-card').classList.remove('hidden');
 
-            log('👁️ First workflow output ready for review', 'success');
-            addTimelineItem('Review Stage', 'Output ready for human review and modification');
+            log('👁️ First workflow outputs ready for review', 'success');
+            addTimelineItem('Review Stage', `Agent output prepared for chaining. Operations analysis available in side panel.`);
+        }
+
+        // Helper function to toggle side output visibility
+        function toggleOutput(outputKey) {
+            const element = document.getElementById(`output-${outputKey}`);
+            if (element.style.display === 'none') {
+                element.style.display = 'block';
+            } else {
+                element.style.display = 'none';
+            }
         }
 
         async function proceedToSecondWorkflow() {
             updateStep('step-second');
             log('🔄 Proceeding to second workflow...', 'loading');
 
-            const modifiedInput = document.getElementById('second_input_review').value;
+            // Get the user-modified inputs for both fields
+            const competitorInput = document.getElementById('competitor_input_review').value;
+            const deOpInput = document.getElementById('current_de_op_input_review').value;
 
-            addTimelineItem('Second Workflow', 'Processing modified input for detailed analysis');
+            // Prepare user modifications for the second workflow
+            const userModifications = {};
+            if (competitorInput) userModifications.competitor_input = competitorInput;
+            if (deOpInput) userModifications.current_de_op_input = deOpInput;
+
+            addTimelineItem('Second Workflow', 'Processing modified inputs for detailed analysis');
 
             try {
                 const execResponse = await fetch('/api/workflow-chain-test', {
@@ -635,7 +720,7 @@
                     body: JSON.stringify({
                         action: 'execute',
                         chainId: currentChainId,
-                        userModifications: { second_input: modifiedInput }
+                        userModifications: userModifications
                     })
                 });
 
@@ -669,23 +754,247 @@
             // Hide review card
             document.getElementById('review-card').classList.add('hidden');
 
-            // Show results
+            // Show results card
+            document.getElementById('results-card').classList.remove('hidden');
+
+            // Show results with improved, user-friendly formatting
             const resultsContainer = document.getElementById('results-container');
-            resultsContainer.innerHTML = `
-                <div class="readable-output">
-                    <h3>🏢 First Workflow: Company Analysis</h3>
-                    <pre>${firstWorkflowOutput.agent_output}</pre>
-                </div>
-                <div class="readable-output">
-                    <h3>📊 Second Workflow: Detailed Analysis</h3>
-                    <pre>${secondWorkflowOutput.Second_output}</pre>
+
+            let resultsHtml = '';
+
+            // Debug: Log the data we have
+            console.log('🔍 First Workflow Output:', firstWorkflowOutput);
+            console.log('🔍 Second Workflow Output:', secondWorkflowOutput);
+
+            // Header with workflow flow visualization
+            resultsHtml += `
+                <div style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;">
+                    <h2 style="margin: 0 0 10px 0; font-size: 24px;">🔗 Workflow Chain Results</h2>
+                    <div style="font-size: 16px; opacity: 0.9;">
+                        🏢 Company Research → 👤 Human Review → 📊 Detailed Analysis
+                    </div>
                 </div>
             `;
 
-            document.getElementById('results-card').classList.remove('hidden');
+            // First workflow results
+            resultsHtml += `
+                <div style="margin-bottom: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
+                    <div style="background: #f8fafc; padding: 20px; border-bottom: 1px solid #e2e8f0;">
+                        <h3 style="margin: 0; color: #2d3748; font-size: 20px;">
+                            🏢 Step 1: Company Research Results
+                        </h3>
+                        <p style="margin: 5px 0 0 0; color: #718096; font-size: 14px;">Initial analysis and data gathering</p>
+                    </div>
+                    <div style="padding: 20px; background: white;">
+            `;
 
-            log('🎉 Workflow chain completed successfully!', 'success');
-            addTimelineItem('Chain Complete', 'All workflows executed successfully with human review', 'completed');
+            if (firstWorkflowOutput && typeof firstWorkflowOutput === 'object') {
+                // Show agent_output prominently (used for chaining)
+                if (firstWorkflowOutput.agent_output) {
+                    resultsHtml += `
+                        <div style="margin-bottom: 25px; padding: 20px; border: 2px solid #10b981; border-radius: 10px; background: #f0fdf4;">
+                            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                <h4 style="margin: 0; color: #065f46; font-size: 18px;">🔗 Competitor Analysis</h4>
+                                <span style="margin-left: 10px; padding: 4px 12px; background: #10b981; color: white; border-radius: 20px; font-size: 12px; font-weight: bold;">CHAINED TO NEXT WORKFLOW</span>
+                            </div>
+                            <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
+                                <pre style="margin: 0; white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #374151;">${firstWorkflowOutput.agent_output}</pre>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultsHtml += `
+                        <div style="margin-bottom: 20px; padding: 15px; border-radius: 8px; background: #fef2f2; border-left: 4px solid #ef4444;">
+                            <p style="margin: 0; color: #dc2626;">⚠️ No agent_output found in first workflow results</p>
+                        </div>
+                    `;
+                }
+
+                // Show current_de_op_output in a side panel style
+                if (firstWorkflowOutput.current_de_op_output) {
+                    resultsHtml += `
+                        <div style="margin-bottom: 20px; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px; background: #f9fafb;">
+                            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                <h4 style="margin: 0; color: #374151; font-size: 18px;">📋 Operations & Business Analysis</h4>
+                                <span style="margin-left: 10px; padding: 4px 12px; background: #6b7280; color: white; border-radius: 20px; font-size: 12px; font-weight: bold;">ALSO CHAINED</span>
+                            </div>
+                            <div style="background: #ffffff; padding: 15px; border-radius: 8px; border-left: 4px solid #6b7280;">
+                                <div style="max-height: 200px; overflow-y: auto;">
+                                    <pre style="margin: 0; white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #374151;">${firstWorkflowOutput.current_de_op_output}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultsHtml += `
+                        <div style="margin-bottom: 20px; padding: 15px; border-radius: 8px; background: #fef2f2; border-left: 4px solid #ef4444;">
+                            <p style="margin: 0; color: #dc2626;">⚠️ No current_de_op_output found in first workflow results</p>
+                        </div>
+                    `;
+                }
+            } else {
+                resultsHtml += `
+                    <div style="margin-bottom: 20px; padding: 15px; border-radius: 8px; background: #fef2f2; border-left: 4px solid #ef4444;">
+                        <p style="margin: 0; color: #dc2626;">⚠️ No first workflow output available</p>
+                        <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 12px;">Debug: ${typeof firstWorkflowOutput} - ${JSON.stringify(firstWorkflowOutput)}</p>
+                    </div>
+                `;
+            }
+
+            resultsHtml += `
+                    </div>
+                </div>
+            `;
+
+            // Show what was actually sent to second workflow (the chained data)
+            resultsHtml += `
+                <div style="margin-bottom: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
+                    <div style="background: #fef3c7; padding: 20px; border-bottom: 1px solid #f59e0b;">
+                        <h3 style="margin: 0; color: #92400e; font-size: 20px;">
+                            👤 Step 2: Human Review & Modifications
+                        </h3>
+                        <p style="margin: 5px 0 0 0; color: #a16207; font-size: 14px;">What was actually sent to the second workflow after your review</p>
+                    </div>
+                    <div style="padding: 20px; background: white;">
+            `;
+
+            // Get the second workflow step to show what inputs were actually used
+            if (secondWorkflowOutput && typeof secondWorkflowOutput === 'object') {
+                // Show the actual inputs that were sent (which might be user-modified)
+                if (secondWorkflowOutput.competitor_input) {
+                    resultsHtml += `
+                        <div style="margin-bottom: 20px; padding: 15px; border-radius: 8px; background: #fef3c7; border-left: 4px solid #f59e0b;">
+                            <h5 style="margin: 0 0 10px 0; color: #92400e; font-size: 16px;">🔗 Competitor Input (Sent to Analysis)</h5>
+                            <div style="background: #fffbeb; padding: 12px; border-radius: 6px; max-height: 150px; overflow-y: auto;">
+                                <pre style="margin: 0; white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; line-height: 1.5; color: #374151;">${secondWorkflowOutput.competitor_input}</pre>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (secondWorkflowOutput.current_de_op_input) {
+                    resultsHtml += `
+                        <div style="margin-bottom: 20px; padding: 15px; border-radius: 8px; background: #fef3c7; border-left: 4px solid #f59e0b;">
+                            <h5 style="margin: 0 0 10px 0; color: #92400e; font-size: 16px;">📋 Operations Input (Sent to Analysis)</h5>
+                            <div style="background: #fffbeb; padding: 12px; border-radius: 6px; max-height: 150px; overflow-y: auto;">
+                                <pre style="margin: 0; white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; line-height: 1.5; color: #374151;">${secondWorkflowOutput.current_de_op_input}</pre>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            resultsHtml += `
+                    </div>
+                </div>
+            `;
+
+            // Second workflow results
+            resultsHtml += `
+                <div style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
+                    <div style="background: #e0f2fe; padding: 20px; border-bottom: 1px solid #0288d1;">
+                        <h3 style="margin: 0; color: #01579b; font-size: 20px;">
+                            📊 Step 3: Final Analysis Results
+                        </h3>
+                        <p style="margin: 5px 0 0 0; color: #0277bd; font-size: 14px;">Generated based on your reviewed inputs</p>
+                    </div>
+                    <div style="padding: 20px; background: white;">
+            `;
+
+            if (secondWorkflowOutput && typeof secondWorkflowOutput === 'object') {
+                // Show the main output from second workflow
+                if (secondWorkflowOutput.Second_output) {
+                    resultsHtml += `
+                        <div style="padding: 20px; border-radius: 10px; background: #f0f9ff; border: 1px solid #0ea5e9;">
+                            <h4 style="margin: 0 0 15px 0; color: #0c4a6e; font-size: 18px;">📈 Greenhouse Gas Analysis Report</h4>
+                            <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #0ea5e9;">
+                                <div style="max-height: 400px; overflow-y: auto;">
+                                    <pre style="margin: 0; white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #374151;">${secondWorkflowOutput.Second_output}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (secondWorkflowOutput.text) {
+                    // Fallback to text field if Second_output doesn't exist
+                    resultsHtml += `
+                        <div style="padding: 20px; border-radius: 10px; background: #f0f9ff; border: 1px solid #0ea5e9;">
+                            <h4 style="margin: 0 0 15px 0; color: #0c4a6e; font-size: 18px;">📈 Analysis Report</h4>
+                            <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #0ea5e9;">
+                                <div style="max-height: 400px; overflow-y: auto;">
+                                    <pre style="margin: 0; white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #374151;">${secondWorkflowOutput.text}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultsHtml += `
+                        <div style="margin-bottom: 20px; padding: 15px; border-radius: 8px; background: #fef2f2; border-left: 4px solid #ef4444;">
+                            <p style="margin: 0; color: #dc2626;">⚠️ No Second_output or text found in second workflow results</p>
+                            <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 12px;">Available fields: ${Object.keys(secondWorkflowOutput).join(', ')}</p>
+                        </div>
+                    `;
+                }
+            } else {
+                resultsHtml += `
+                    <div style="margin-bottom: 20px; padding: 15px; border-radius: 8px; background: #fef2f2; border-left: 4px solid #ef4444;">
+                        <p style="margin: 0; color: #dc2626;">⚠️ No second workflow output available</p>
+                        <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 12px;">Debug: ${typeof secondWorkflowOutput} - ${JSON.stringify(secondWorkflowOutput)}</p>
+                    </div>
+                `;
+            }
+
+            resultsHtml += `
+                    </div>
+                </div>
+            `;
+
+            // Add action buttons
+            resultsHtml += `
+                <div style="text-align: center; margin-top: 30px; padding: 20px;">
+                    <button class="button success" onclick="downloadResults()" style="margin-right: 15px;">
+                        💾 Download Results
+                    </button>
+                    <button class="button secondary" onclick="resetChain()">
+                        🔄 Start New Analysis
+                    </button>
+                </div>
+            `;
+
+            resultsContainer.innerHTML = resultsHtml;
+
+            log('✅ Workflow chain completed successfully!', 'success');
+            addTimelineItem('Complete', 'Analysis chain finished. Results ready for review.');
+        }
+
+        // Download results functionality
+        function downloadResults() {
+            const results = {
+                timestamp: new Date().toISOString(),
+                workflow_chain_results: {
+                    first_workflow: {
+                        agent_output: firstWorkflowOutput?.agent_output || '',
+                        current_de_op_output: firstWorkflowOutput?.current_de_op_output || ''
+                    },
+                    human_review: {
+                        competitor_input_sent: secondWorkflowOutput?.competitor_input || '',
+                        current_de_op_input_sent: secondWorkflowOutput?.current_de_op_input || ''
+                    },
+                    final_analysis: {
+                        report: secondWorkflowOutput?.Second_output || secondWorkflowOutput?.text || ''
+                    }
+                }
+            };
+
+            const dataStr = JSON.stringify(results, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+            const exportFileDefaultName = `workflow-chain-results-${new Date().toISOString().split('T')[0]}.json`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+
+            log('📥 Results downloaded successfully', 'success');
         }
 
         function resetChain() {

@@ -5,6 +5,8 @@ export const API_URL = `${process.env.NEXT_PUBLIC_API_URL}`
 export const IS_WORKFLOW = `${process.env.NEXT_PUBLIC_APP_TYPE_WORKFLOW}` === 'true'
 export const SECOND_WORKFLOW_ID = `${process.env.NEXT_PUBLIC_SECOND_WORKFLOW_ID}`
 export const SECOND_WORKFLOW_KEY = `${process.env.NEXT_PUBLIC_SECOND_WORKFLOW_KEY}`
+export const THIRD_WORKFLOW_ID = `${process.env.NEXT_PUBLIC_THIRD_WORKFLOW_ID}`
+export const THIRD_WORKFLOW_KEY = `${process.env.NEXT_PUBLIC_THIRD_WORKFLOW_KEY}`
 export const APP_INFO: AppInfo = {
   title: 'Chat APP',
   description: '',

@@ -342,15 +342,11 @@
                     <div class="step-label">Review & Modify</div>
                 </div>
                 <div class="step" id="step-second">
-                    <div class="step-circle">5</div>
-                    <div class="step-label">Third Workflow</div>
-                </div>
-                <div class="step" id="step-third">
-                    <div class="step-circle">5</div>
-                    <div class="step-label">Third Workflow</div>
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Second Workflow</div>
                 </div>
                 <div class="step" id="step-complete">
-                    <div class="step-circle">6</div>
+                    <div class="step-circle">✓</div>
                     <div class="step-label">Complete</div>
                 </div>
             </div>
@@ -361,7 +357,7 @@
             <div class="input-section">
                 <div class="card" id="input-card">
                     <h2>🚀 Setup Your Workflow Chain</h2>
-                    <p>Configure the inputs for your three-step analysis workflow</p>
+                    <p>Configure the inputs for your two-step analysis workflow</p>
 
                     <div class="form-row">
                         <div class="form-group">
@@ -503,7 +499,7 @@
             });
 
             // Set completed status for previous steps
-            const steps = ['step-input', 'step-first', 'step-review', 'step-second', 'step-third', 'step-complete'];
+            const steps = ['step-input', 'step-first', 'step-review', 'step-second', 'step-complete'];
             const currentIndex = steps.indexOf(stepId);
 
             for (let i = 0; i < currentIndex; i++) {
@@ -536,7 +532,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        action: 'create-three-step',
+                        action: 'create-custom',
                         inputs: inputs
                     })
                 });

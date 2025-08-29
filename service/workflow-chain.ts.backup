@@ -267,39 +267,6 @@ export class WorkflowChainManager {
                         console.log(`⚠️ DEBUG: Expected inputs: competitor_input=${!!currentStep.inputs.competitor_input}, current_de_op_input=${!!currentStep.inputs.current_de_op_input}`)
                     }
 
-                // 🥉 HANDLE THIRD WORKFLOW (Advanced Processing)
-                } else if (currentStep.inputs.hasOwnProperty('combined_company_info') || currentStep.inputs.hasOwnProperty('footprints_data')) {
-
-                    // 🎯 SMART MAPPING FOR THIRD WORKFLOW
-                    let mappingApplied = false
-
-                    // 📊 MAP all_footprints → footprints_data
-                    if (currentStep.inputs.hasOwnProperty('footprints_data') && previousStep.outputs.all_footprints) {
-                        stepInputs.footprints_data = previousStep.outputs.all_footprints
-                        console.log(`📊 DEBUG: Mapping all_footprints to footprints_data:`, previousStep.outputs.all_footprints)
-                        mappingApplied = true
-                    }
-
-                    // 🏢 MAP current_de_op_output → combined_company_info  
-                    if (currentStep.inputs.hasOwnProperty('combined_company_info') && previousStep.outputs.current_de_op_output) {
-                        stepInputs.combined_company_info = previousStep.outputs.current_de_op_output
-                        console.log(`�� DEBUG: Mapping current_de_op_output to combined_company_info:`, previousStep.outputs.current_de_op_output.substring(0, 100) + '...') 
-                        mappingApplied = true
-                    }
-
-                    // 🔧 APPLY USER MODIFICATIONS (highest priority)
-                    if (currentStep.userModifications) {
-                        stepInputs = { ...stepInputs, ...currentStep.userModifications }
-                        console.log(`✏️ DEBUG: Applied user modifications for third workflow:`, currentStep.userModifications)
-                    }
-
-                    if (mappingApplied) {
-                        console.log(`✅ DEBUG: Successfully mapped third workflow inputs`)
-                    } else {
-                        console.log(`⚠️ DEBUG: No suitable outputs found for third workflow. Available outputs:`, Object.keys(previousStep.outputs))
-                        console.log(`⚠️ DEBUG: Expected inputs: combined_company_info=${!!currentStep.inputs.combined_company_info}, footprints_data=${!!currentStep.inputs.footprints_data}`)
-                    }
-
                     // 🔄 FALLBACK: Handle legacy second_input format (for backward compatibility)
                 } else if (currentStep.inputs.hasOwnProperty('second_input')) {
 
